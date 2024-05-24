@@ -1,0 +1,97 @@
+﻿@page "/Admin"
+@using Molninlamning1.Models
+@using Molninlamning1.Data
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.Extensions.DependencyInjection;
+@rendermode InteractiveServer
+
+<PageTitle>Admin Page</PageTitle>
+
+<container>
+    <EditForm Model="@_newMemory" OnValidSubmit="@PostNewMemory">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="mb-3">
+            <label for="name" class="form-label">Name</label>
+            <InputText id="name" class="form-control" @bind-Value="_newMemory.Name" />
+        </div>
+
+        <div class="mb-3">
+            <label for="description" class="form-label">Description</label>
+            <InputText id="description" class="form-control" @bind-Value="_newMemory.Description" />
+        </div>
+
+        <div class="mb-3">
+            <label for="imageUrl" class="form-label">Image URL</label>
+            <InputText id="imageUrl" class="form-control" @bind-Value="_newMemory.ImageUrl" />
+        </div>
+
+        <button type="submit" class="btn btn-primary">Post New Image</button>
+    </EditForm>
+</container>
+
+
+
+<container>
+    <EditForm Model="@selectedMemoryId" OnValidSubmit="@DeleteMemory">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="mb-3">
+            <label for="memorySelect" class="form-label">Select Memory to Delete</label>
+            <InputSelect id="memorySelect" class="form-control" @bind-Value="selectedMemoryId">
+                <option value="">Select memory</option>
+                @foreach (var memory in imagelibrary)
+                {
+                    <option value="@memory.Id">@memory.Name</option>
+                }
+            </InputSelect>
+        </div>
+
+        <button type="submit" class="btn btn-danger">Delete Memory</button>
+    </EditForm>
+</container>
+
+@code {
+    private Mymemories memoryToDelete = new Mymemories();
+    private int selectedMemoryId;
+    private Mymemories _newMemory = new Mymemories();
+    public List<Mymemories> imagelibrary = new List<Mymemories>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetMemories();
+    }
+
+    public async Task GetMemories()
+    {
+        imagelibrary = await _context._images.ToListAsync();
+    }
+
+    [Inject]
+    public ImageDbContext _context { get; set; }
+
+    private async Task PostNewMemory()
+    {
+        _context._images.Add(_newMemory);
+        await _context.SaveChangesAsync();
+        imagelibrary = await _context._images.ToListAsync();
+        _newMemory = new Mymemories();
+    }
+
+    private async Task DeleteMemory()
+    {
+        var memoryToDelete = await _context._images.FindAsync(selectedMemoryId);
+        if (memoryToDelete != null)
+        {
+            _context._images.Remove(memoryToDelete);
+            await _context.SaveChangesAsync();
+
+        }
+
+        imagelibrary = await _context._images.ToListAsync();
+
+    }
+    
+}

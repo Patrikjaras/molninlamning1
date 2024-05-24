@@ -1,0 +1,65 @@
+﻿@page "/"
+@using Molninlamning1.Models
+@using Molninlamning1.Data
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.Extensions.DependencyInjection;
+
+
+@rendermode InteractiveServer
+
+<PageTitle>Home</PageTitle>
+
+<h1>Hello, world!</h1>
+
+<container>
+    <div>
+        @foreach (var memory in imagelibrary)
+        {
+            <div class="card" style="width: 18rem;">
+                <img src="@memory.ImageUrl" class="card-img-top" alt="...">
+                <div class="card-body">
+                    <h5 class="card-title">@memory.Name</h5>
+                    <p class="card-text">@memory.Description</p>
+                    <a href="#" class="btn btn-primary">Go somewhere</a>
+                </div>
+            </div>
+        }
+    </div>
+</container>
+
+@code
+{
+    public List<Mymemories> imagelibrary = new List<Mymemories>();
+    public Mymemories NewMemory = new Mymemories();
+
+    [Inject]
+    public ImageDbContext _context { get; set; }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+         await GetMemories();
+    }
+
+    public async Task GetMemories()
+    {
+
+        imagelibrary = await _context._images.ToListAsync();
+
+    }
+
+    public async Task PostNewImage(string name, string description, string imageurl)
+    {
+        var newImage = new Mymemories
+            {
+                Name = name,
+                Description = description,
+                ImageUrl = imageurl
+            };
+
+        _context._images.Add(newImage);
+        await _context.SaveChangesAsync();
+
+        await GetMemories();
+    }
+}
